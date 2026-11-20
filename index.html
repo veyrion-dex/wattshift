@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WattShift</title>
+<link rel="stylesheet" href="style.css">
+<script defer src="engine.js"></script>
+<script defer src="app.js"></script>
+</head>
+<body>
+<main>
+<header class="hero"><div><h1>WattShift</h1><p>Планируй работу приборов по почасовому тарифу и лимиту мощности.</p></div><button id="example" class="quiet" type="button">Загрузить пример</button></header>
+<section class="summary" aria-label="Результаты расчёта">
+  <div><span>Обычный план</span><strong id="baseline">—</strong></div>
+  <div><span>Подобранный план</span><strong id="optimal">—</strong></div>
+  <div><span>Разница</span><strong id="saving">—</strong></div>
+  <div><span>Расход энергии</span><strong id="energy">—</strong></div>
+</section>
+<div class="workspace">
+<aside class="panel settings" aria-labelledby="settings-heading">
+  <h2 id="settings-heading">Исходные данные</h2>
+  <p id="tariff-name"></p>
+  <details id="tariff-details"><summary>Импортировать тариф CSV</summary>
+    <p class="muted" id="csv-guide">Столбцы <code>hour,price</code>, по одной строке на час 00–23. Цена за кВт·ч в одной валюте, до 4 знаков после запятой.</p>
+    <label for="file">Выбрать файл</label><input id="file" type="file" accept=".csv,.txt,text/csv" aria-describedby="csv-guide">
+    <label for="csv">Или вставить содержимое</label><textarea id="csv" rows="4" placeholder="hour,price&#10;00:00,0.15" aria-describedby="csv-guide"></textarea>
+    <div class="actions"><button id="import" type="button" class="quiet">Применить CSV</button><button type="button" id="template" class="plain">Скачать пример CSV</button></div>
+    <p id="csv-error" role="alert" class="error"></p>
+  </details>
+  <form id="limit-form">
+    <label for="cap">Лимит для указанных приборов, Вт</label>
+    <input id="cap" type="number" min="1" max="100000" step="1" required aria-describedby="cap-guide">
+    <p id="cap-guide" class="muted">Параметр модели, который ты задаёшь сам. Другие нагрузки в расчёт не включены.</p>
+    <button id="calculate" type="submit">Рассчитать расписание</button>
+    <p id="calc-error" class="error" role="alert"></p>
+  </form>
+</aside>
+<section class="panel devices" aria-labelledby="devices-heading">
+  <div class="heading"><h2 id="devices-heading">Приборы</h2><button id="new" class="quiet" type="button">Добавить прибор</button></div>
+  <p class="muted">Постоянная мощность на весь цикл. Начало и окончание — на границе часа.</p>
+  <ul id="devices-list" class="devices-list"></ul>
+  <form id="device-form" hidden>
+    <h3 id="editor-title">Новый прибор</h3>
+    <div class="fields">
+      <label class="full">Название<input id="name" name="deviceName" required maxlength="60"></label>
+      <label>Мощность, Вт<input name="watts" type="number" required min="1" max="100000" step="1"></label>
+      <label>Длительность, ч<input name="duration" type="number" required min="1" max="24" step="1"></label>
+      <label>Самый ранний старт, ч<input name="earliest" type="number" required min="0" max="23" step="1"></label>
+      <label>Крайнее окончание, ч<input name="latest" type="number" required min="1" max="24" step="1"></label>
+      <label>Обычный старт, ч<input name="usual" type="number" required min="0" max="23" step="1"></label>
+    </div>
+    <p id="device-error" class="error" role="alert"></p>
+    <div class="actions"><button type="submit">Сохранить прибор</button><button id="cancel" class="quiet" type="button">Отменить</button></div>
+  </form>
+</section>
+</div>
+<section class="panel results" aria-labelledby="schedule-heading">
+  <div class="heading"><h2 id="schedule-heading">Расписание и нагрузка</h2><button id="export" class="quiet" type="button" disabled>Скачать расписание CSV</button></div>
+  <p id="result-status" class="muted" role="status"></p>
+  <div id="result-content" hidden>
+    <div class="chart-caption"><h3>Мощность по часам, Вт</h3><div class="legend"><span class="baseline-key">Обычный план</span><span class="optimal-key">Подобранный план</span></div></div>
+    <div class="scroll" tabindex="0" aria-label="График нагрузки, горизонтальная прокрутка"><div id="chart" aria-hidden="true"></div></div>
+    <p id="peak" class="muted"></p>
+    <div class="scroll" tabindex="0" aria-label="Таблица расписания"><table id="schedule"><caption>Время работы приборов</caption><thead><tr><th scope="col">Прибор</th><th scope="col">Обычное время</th><th scope="col">Подобранное время</th><th scope="col">Затраты по плану</th></tr></thead><tbody id="schedule-rows"></tbody></table></div>
+    <details><summary>Почасовые значения нагрузки и тарифа</summary>
+      <div class="scroll" tabindex="0" aria-label="Почасовая таблица"><table><caption>Тариф и нагрузка по часам</caption><thead><tr><th scope="col">Час</th><th scope="col">Цена за кВт·ч</th><th scope="col">Обычная нагрузка, Вт</th><th scope="col">Подобранная нагрузка, Вт</th></tr></thead><tbody id="hour-rows"></tbody></table></div>
+    </details>
+  </div>
+</section>
+<footer>Расчёт охватывает переменную стоимость выбранных приборов и не включает фиксированные сборы. Данные обрабатываются на устройстве.<span id="storage-note"></span></footer>
+</main>
+</body>
+</html>
